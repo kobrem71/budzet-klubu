@@ -1,56 +1,66 @@
-# Budżet klubu — KOBREM 71
+# Budżet klubu — KOBREM 71 (dostęp na hasło)
 
-Prosty dashboard z budżetem klubu. Statyczna strona (jeden plik `index.html`),
-działa lokalnie i na GitHub Pages, bez żadnej instalacji.
+Prosty dashboard z budżetem klubu, hostowany na GitHub Pages, **chroniony hasłem**.
 
-## Struktura
+## Jak działa ochrona
 
+GitHub Pages jest zawsze publiczny, więc strony nie da się „schować" po stronie
+serwera. Zamiast tego **cała strona jest zaszyfrowana hasłem (AES, StatiCrypt)**:
+
+- Kto wejdzie na adres, widzi ekran z prośbą o hasło.
+- Bez hasła treść to nieczytelny szyfr — nawet w podglądzie źródła strony
+  nie widać ani salda, ani kwot, ani opisów.
+- Zdjęcia faktur są **wtapiane w zaszyfrowaną stronę** (base64), więc nie da się
+  ich otworzyć osobnym linkiem z pominięciem hasła.
+
+### Co warto wiedzieć (uczciwie)
+
+- To **jedno wspólne hasło** dla całego zarządu (nie osobne konta). Żeby odebrać
+  komuś dostęp — zmieniamy hasło i rozsyłamy nowe.
+- Bezpieczeństwo = siła hasła. Ustaw długie, nieoczywiste hasło (najlepiej frazę).
+- W repozytorium leży **tylko zaszyfrowany `index.html`**. Plik źródłowy z jawnymi
+  danymi (`index.source.html`) nigdy nie trafia do gita (jest w `.gitignore`).
+- Jeśli kiedyś zechcesz osobne loginy dla każdego członka zarządu (z możliwością
+  odbierania dostępu), to darmowa opcja Cloudflare Access — ale to już poza gitem.
+
+## Zmiana hasła
+
+```bash
+npx staticrypt index.source.html -p "TWOJE-NOWE-HASLO" --short -d _enc --remember 30 \
+  --template-title "Budżet klubu — KOBREM 71" \
+  --template-instructions "Dostęp tylko dla zarządu. Podaj hasło, aby zobaczyć budżet." \
+  --template-button "Wejdź" --template-placeholder "Hasło" \
+  --template-error "Nieprawidłowe hasło — spróbuj ponownie." \
+  --template-remember "Zapamiętaj mnie na tym urządzeniu (30 dni)" \
+  --template-color-primary "#1c6a47" --template-color-secondary "#e8ece6"
+mv _enc/index.source.html index.html && rm -rf _enc
 ```
-budzet-klubu/
-├── index.html      ← cały dashboard + dane
-├── faktury/        ← tu trafiają zdjęcia faktur
-└── README.md
-```
 
-## Jak liczone są kwoty
+Potem `git add index.html && git commit -m "zmiana hasla" && git push`.
 
-- **Saldo na koncie** — realne pieniądze na koncie klubu (podane ręcznie).
-- **Zaplanowane do zapłaty** — przyszłe wydatki (np. pensja trenera). Odejmowane od salda.
-- **Prognozowane saldo** = saldo − zaplanowane do zapłaty.
-- **Faktury** — rejestr wydatków ze zdjęciem. Domyślnie mają status „opłacony”
-  (są już uwzględnione w saldzie), więc nie odejmują się drugi raz. Fakturę
-  jeszcze nieopłaconą oznaczamy statusem `do_zaplaty` i wtedy wchodzi do prognozy.
+## Dodanie faktury
 
-## Jak dodać fakturę
-
-1. Wrzuć zdjęcie do folderu `faktury/` (np. `2026-08-15-pilki.jpg`).
-2. W `index.html`, w sekcji `const DANE`, dopisz wpis do listy `wydatki`:
-
-```js
-{ data:"2026-08-15", opis:"Piłki treningowe", kategoria:"Sprzęt",
-  kwota:349.00, status:"oplacony", zdjecie:"2026-08-15-pilki.jpg" },
-```
-
-3. Zaktualizuj `saldo` i `aktualizacja` na górze `DANE`.
-
-W praktyce wystarczy, że prześlesz mi zdjęcie + opis + kwotę — zrobię to za Ciebie
-i oddam gotowe pliki do wgrania.
+Prześlij mi zdjęcie + opis + kwotę. Ja wtopię zdjęcie w stronę, zaktualizuję
+saldo, ponownie zaszyfruję i oddam gotowy `index.html` do wypchnięcia.
 
 ## Publikacja na GitHub Pages
 
 ```bash
 cd budzet-klubu
-git init
-git add .
-git commit -m "Budżet klubu — start"
-git branch -M main
 git remote add origin https://github.com/kobrem71/budzet-klubu.git
 git push -u origin main
 ```
 
-Następnie w repozytorium na GitHubie: **Settings → Pages → Source: `main` / `root`**.
-Po chwili strona będzie pod adresem:
+Następnie **Settings → Pages → Source: main / root**. Adres strony:
+`https://kobrem71.github.io/budzet-klubu/`
+
+## Pliki
 
 ```
-https://kobrem71.github.io/budzet-klubu/
+budzet-klubu/
+├── index.html          ← ZASZYFROWANA strona (to idzie do repo)
+├── README.md
+├── .gitignore
+├── index.source.html   ← JAWNE źródło, lokalne, NIE w repo
+└── .staticrypt.json    ← konfiguracja szyfrowania, lokalne, NIE w repo
 ```
