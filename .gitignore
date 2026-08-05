@@ -1,0 +1,6 @@
+# Pliki robocze — NIGDY nie wysyłamy ich do repo (zawierają jawne dane budżetu)
+index.source.html
+.staticrypt.json
+_enc/
+_recover/
+faktury-src/
